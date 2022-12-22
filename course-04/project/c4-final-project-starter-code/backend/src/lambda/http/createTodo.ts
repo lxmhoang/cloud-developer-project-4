@@ -14,7 +14,7 @@ export const handler = middy(
     const newTodo: CreateTodoRequest = JSON.parse(event.body);
     // TODO: Implement creating a new TODO item
     const userId: string = getUserId(event);
-    logger.info('Starting create new todo!');
+    logger.info(`Starting create new todo with event header : ${event.headers} body :  ! ${event.body} and user ID : ${userId}`);
     
     const todo = await createTodo(newTodo, userId);
 

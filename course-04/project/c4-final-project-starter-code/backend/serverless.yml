@@ -20,7 +20,7 @@ provider:
   lambdaHashingVersion: '20201221'
   profile: default
 
-  stage: ${opt:stage, 'dev'}
+  stage: ${opt:stage, 'dev2'}
   region: ${opt:region, 'us-east-1'}
 
   tracing:
@@ -184,6 +184,7 @@ functions:
           path: todos/{todoId}/attachment
           cors: true
           authorizer: Auth
+          
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -221,14 +222,14 @@ resources:
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
-          - AttributeName: id
+          - AttributeName: todoId
             AttributeType: S
           - AttributeName: createdAt
             AttributeType: S
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
-          - AttributeName: id
+          - AttributeName: todoId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}

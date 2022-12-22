@@ -19,8 +19,8 @@ export async function updateTodo(userId: string, id: string, payload: UpdateTodo
   return todosAcess.updateTodo(userId, id, payload);
 }
 
-export async function updateTodoAttachment(userId: string, id: string): Promise<void> {
-  return todosAcess.updateTodoAttachment(userId, id);
+export async function updateTodoAttachment(userId: string, todoId: string): Promise<void> {
+  return todosAcess.updateTodoAttachment(userId, todoId);
 }
 
 export async function deleteTodo(userId: string, id: string): Promise<void> {
@@ -34,12 +34,12 @@ export async function createTodo(
   const id = uuid.v4();
 
   return await todosAcess.createTodo({
-    userId,
+    userId: userId,
     todoId: id,
-    name: createTodoRequest.name,
-    done: false,
     createdAt: new Date().toISOString(),
-    dueDate: createTodoRequest.dueDate
+    name: createTodoRequest.name,
+    dueDate: createTodoRequest.dueDate,
+    done: false,
   })
 }
 

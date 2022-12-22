@@ -43,6 +43,21 @@ export async function patchTodo(
   })
 }
 
+
+export async function updateTodoWithAttachmentURL(
+  idToken: string,
+  todoId: string
+): Promise<void> {
+  console.log("begin to update url to db")
+  await Axios.put(`${apiEndpoint}/todos/${todoId}/attachment`, {},{
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    }
+  })
+}
+
+
 export async function deleteTodo(
   idToken: string,
   todoId: string
@@ -65,9 +80,12 @@ export async function getUploadUrl(
       'Authorization': `Bearer ${idToken}`
     }
   })
+
+  console.log('getUploadUrl data ', response.data.uploadUrl);
   return response.data.uploadUrl
 }
 
 export async function uploadFile(uploadUrl: string, file: Buffer): Promise<void> {
+  console.log('upload file ', uploadUrl);
   await Axios.put(uploadUrl, file)
 }

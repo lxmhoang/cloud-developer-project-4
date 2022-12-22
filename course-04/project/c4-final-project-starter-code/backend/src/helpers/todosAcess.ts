@@ -6,7 +6,7 @@ import { TodoItem } from '../models/TodoItem';
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest';
 import { createLogger } from '../utils/logger';
 
-const logger = createLogger('TodosController');
+const logger = createLogger('TodoAccess');
 
 const XAWS = AWSXRay.captureAWS(AWS);
 
@@ -45,6 +45,7 @@ export class TodosAccess {
 }
 
   async createTodo(todo: TodoItem): Promise<TodoItem> {
+    logger.info(`begin to create new item ${JSON.stringify(todo)}`)
     await this.docClient.put({
       TableName: this.todoTable,
       Item: todo
@@ -86,7 +87,10 @@ export class TodosAccess {
   async updateTodoAttachment(userId: string, id: string): Promise<void> {
     await this.docClient.update({
       TableName: this.todoTable,
-      Key: { id, userId },
+      Key: {
+        todoId: id,
+        userId: userId                
+    },    
       UpdateExpression: 'set #attachmentUrl = :attachmentUrl',
       ExpressionAttributeNames: { '#attachmentUrl': 'attachmentUrl' },
       ExpressionAttributeValues: {
