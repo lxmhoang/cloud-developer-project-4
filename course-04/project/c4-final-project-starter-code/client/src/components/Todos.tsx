@@ -85,13 +85,15 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         })
       })
     } catch {
-      alert('Todo deletion failed')
+      alert('Todo check failed')
     }
   }
 
   async componentDidMount() {
     try {
       const todos = await getTodos(this.props.auth.getIdToken())
+      
+  console.log('Todosaaaa:', todos)
       this.setState({
         todos,
         loadingTodos: false

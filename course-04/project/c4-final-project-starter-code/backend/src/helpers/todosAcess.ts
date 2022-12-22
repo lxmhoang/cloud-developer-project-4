@@ -55,11 +55,12 @@ export class TodosAccess {
   }
 
   async deleteTodo(userId: string, id: string): Promise<void> {
+    logger.info(`begin to delete item with id  ${id}`)
     await this.docClient.delete({
       TableName: this.todoTable,
       Key: {
-        id,
-        userId
+        todoId: id,
+        userId: userId    
       }
     }).promise();
 
@@ -70,7 +71,10 @@ export class TodosAccess {
     logger.info('Starting update todo: ', todo);
     await this.docClient.update({
       TableName: this.todoTable,
-      Key: { id, userId },
+      Key: {
+        todoId: id,
+        userId: userId    
+      },
       UpdateExpression: 'set #name = :updateName, #done = :doneStatus, #dueDate = :updateDueDate',
       ExpressionAttributeNames: { '#name': 'name', '#done': 'done', '#dueDate': 'dueDate' },
       ExpressionAttributeValues: {
