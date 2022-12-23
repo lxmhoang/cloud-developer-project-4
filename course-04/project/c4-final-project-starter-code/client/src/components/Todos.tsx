@@ -11,12 +11,23 @@ import {
   Icon,
   Input,
   Image,
-  Loader
+  Loader,
+  Container,
+  Select,
+  GridColumn,
 } from 'semantic-ui-react'
+import { GetTodoReq } from '../types/GetTodoReq'
 
 import { createTodo, deleteTodo, getTodos, patchTodo } from '../api/todos-api'
 import Auth from '../auth/Auth'
 import { Todo } from '../types/Todo'
+
+const LIMITS = [
+  { key: '3', value: 3, text: '3 itmss per page' },
+  { key: '6', value: 6, text: '6 items per page' },
+  { key: '9', value: 9, text: '9 items per page' }
+]
+
 
 interface TodosProps {
   auth: Auth
@@ -26,14 +37,19 @@ interface TodosProps {
 interface TodosState {
   todos: Todo[]
   newTodoName: string
-  loadingTodos: boolean
+  loadingTodos: boolean,
+  param: GetTodoReq,
+  nextKeyArr: string[]
 }
 
 export class Todos extends React.PureComponent<TodosProps, TodosState> {
   state: TodosState = {
     todos: [],
     newTodoName: '',
-    loadingTodos: true
+    loadingTodos: true,
+    param: { nextKey: '', limit : 3},
+    nextKeyArr: []
+  
   }
 
   handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,8 +68,13 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         dueDate
       })
       this.setState({
-        todos: [...this.state.todos, newTodo],
-        newTodoName: ''
+        loadingTodos: true,
+        newTodoName: '',
+        nextKeyArr: [],         
+        param: {
+          ...this.state.param,
+          nextKey: ''
+        }
       })
     } catch {
       alert('Todo creation failed')
@@ -88,18 +109,56 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       alert('Todo check failed')
     }
   }
+  onClickNextButton() {
+    this.state.nextKeyArr.push(this.state.param.nextKey);
+    this.setState({ loadingTodos: true });
+  }
 
-  async componentDidMount() {
+  onClickPreviousButton() {
+    this.state.nextKeyArr.pop();
+    this.setState({        
+      param: {
+        ...this.state.param,
+        nextKey: this.state.nextKeyArr.at(-1) || ''
+      }, 
+      loadingTodos: true });
+  }
+
+  onChangeLimit = (newLimit: number) => {
+    this.setState({ 
+      loadingTodos: true,
+      nextKeyArr: [], 
+      param: {
+        ...this.state.param,
+        limit: newLimit,
+        nextKey: ''
+      }
+    });
+  }
+
+  async getTodos() {
     try {
-      const todos = await getTodos(this.props.auth.getIdToken())
-      
-  console.log('Todosaaaa:', todos)
+      const result = await getTodos(this.props.auth.getIdToken(), this.state.param);
       this.setState({
-        todos,
+        todos: result.items,
+        param: {
+          ...this.state.param,
+          nextKey: result.nextKey ?? '',
+        },
         loadingTodos: false
       })
     } catch (e) {
       alert(`Failed to fetch todos: ${(e as Error).message}`)
+    }
+  }
+
+  async componentDidMount() {
+    await this.getTodos();
+  }
+
+  async componentDidUpdate(prevProps: any, prevState: TodosState) {
+    if (this.state.loadingTodos !== prevState.loadingTodos && this.state.loadingTodos) {
+      await this.getTodos();
     }
   }
 
@@ -109,9 +168,37 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         <Header as="h1">TODOs</Header>
 
         {this.renderCreateTodoInput()}
+        {this.renderPagingComp()}
 
         {this.renderTodos()}
       </div>
+    )
+  }
+
+  renderPagingComp() {
+    return (
+      <Container style={{ paddingBottom: '15px', textAlign: 'right' }}>          
+          <Button primary
+                  content='Previous'
+                  icon='left arrow'
+                  labelPosition='left'
+                  loading={this.state.loadingTodos}
+                  onClick={() => this.onClickPreviousButton()}
+                  disabled={(this.state.nextKeyArr.length === 0)} />
+          <Button primary
+                  content='Next'
+                  icon='right arrow'
+                  labelPosition='right'
+                  loading={this.state.loadingTodos}
+                  onClick={() => this.onClickNextButton()}
+                  disabled={(this.state.param.nextKey === null || this.state.param.nextKey === '')} />
+          <Select placeholder='Page size' 
+                  style={{ marginRight: '10px' }} 
+                  options={LIMITS} 
+                  value={this.state.param.limit} 
+                  onChange={(e, data) => this.onChangeLimit(Number(data.value))}
+                   />
+      </Container>
     )
   }
 
@@ -164,19 +251,23 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         {this.state.todos.map((todo, pos) => {
           return (
             <Grid.Row key={todo.todoId}>
+            <GridColumn>{todo.attachmentUrl && (
+              <Image src={todo.attachmentUrl} size="medium" wrapped />
+            )}</GridColumn>
+
               <Grid.Column width={1} verticalAlign="middle">
                 <Checkbox
                   onChange={() => this.onTodoCheck(pos)}
                   checked={todo.done}
                 />
               </Grid.Column>
-              <Grid.Column width={10} verticalAlign="middle">
-                {todo.name}
-              </Grid.Column>
-              <Grid.Column width={3} floated="right">
+              <Grid.Column width={2} verticalAlign="middle"  textAlign="left">
                 {todo.dueDate}
               </Grid.Column>
-              <Grid.Column width={1} floated="right">
+              <Grid.Column width={10} verticalAlign="middle" textAlign="center"> 
+                {todo.name}
+              </Grid.Column>
+              <Grid.Column width={1} floated="right"  verticalAlign="middle" >
                 <Button
                   icon
                   color="blue"
@@ -185,7 +276,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                   <Icon name="pencil" />
                 </Button>
               </Grid.Column>
-              <Grid.Column width={1} floated="right">
+              <Grid.Column width={1} floated="right"  verticalAlign="middle" >
                 <Button
                   icon
                   color="red"
@@ -194,9 +285,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                   <Icon name="delete" />
                 </Button>
               </Grid.Column>
-              {todo.attachmentUrl && (
-                <Image src={todo.attachmentUrl} size="small" wrapped />
-              )}
+              
               <Grid.Column width={16}>
                 <Divider />
               </Grid.Column>

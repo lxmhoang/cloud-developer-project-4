@@ -3,8 +3,15 @@ import { Todo } from '../types/Todo';
 import { CreateTodoRequest } from '../types/CreateTodoRequest';
 import Axios from 'axios'
 import { UpdateTodoRequest } from '../types/UpdateTodoRequest';
+import { GetTodoRes } from '../types/GetTodoRes';
+import { GetTodoReq } from '../types/GetTodoReq';
 
-export async function getTodos(idToken: string): Promise<Todo[]> {
+
+export async function getTodos(
+  idToken: string,
+  request: GetTodoReq
+): Promise<GetTodoRes> {
+
   console.log('Fetching todos')
 
   const response = await Axios.get(`${apiEndpoint}/todos`, {
@@ -12,9 +19,14 @@ export async function getTodos(idToken: string): Promise<Todo[]> {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
     },
+    params: {
+      limit: request.limit,
+      nextKey: request.nextKey
+    },
+
   })
-  console.log('Todos:', response.data)
-  return response.data.items
+  console.log('Todos:', response.data.items)
+  return response.data
 }
 
 export async function createTodo(

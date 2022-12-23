@@ -4,6 +4,7 @@ import { TodoItem } from '../models/TodoItem';
 import { TodosAccess } from '../helpers/todosAcess';
 import { CreateTodoRequest } from '../requests/CreateTodoRequest';
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest';
+import { GetTodoRes } from '../models/GetTodoRes';
 
 const todosAcess = new TodosAccess()
 
@@ -11,9 +12,14 @@ export async function getTodos(userId: string): Promise<TodoItem[]> {
   return todosAcess.getTodosForUser(userId);
 }
 
-export async function getTodo(userId: string, todoId: string): Promise<TodoItem> {
-  return todosAcess.getTodo(userId, todoId);
+export async function getTodosForUser(userId: string, nextKey: any, limit: number, orderBy: string): Promise<GetTodoRes> {
+
+  return await todosAcess.getTodos(userId, nextKey, limit, orderBy);
 }
+
+// export async function getTodo(userId: string, todoId: string): Promise<TodoItem> {
+//   return todosAcess.getTodo(userId, todoId);
+// }
 
 export async function updateTodo(userId: string, id: string, payload: UpdateTodoRequest) : Promise<void>{
   return todosAcess.updateTodo(userId, id, payload);

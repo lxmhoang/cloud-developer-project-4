@@ -5,6 +5,8 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { TodoItem } from '../models/TodoItem';
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest';
 import { createLogger } from '../utils/logger';
+import { GetTodoRes } from '../models/GetTodoRes';
+import { encodeNextKey } from '../lambda/utils';
 
 const logger = createLogger('TodoAccess');
 
@@ -32,16 +34,31 @@ export class TodosAccess {
     return items as TodoItem[]
   }
 
-  async getTodo(todoId: string, userId: string): Promise<TodoItem> {
-    const result = await this.docClient.get({
-        TableName: this.todoTable,
-        Key: {
-            todoId,
-            userId
-        }
-    }).promise();
+  async getTodos(userId: string, nextKey: any, limit: number, orderBy: string): Promise<GetTodoRes> {
 
-    return result.Item as TodoItem;
+        // Order by created date by default
+    let indexName = process.env.TODOS_CREATED_AT_INDEX;
+    if (!!orderBy && orderBy === "dueDate") {
+            indexName = process.env.TODOS_DUE_DATE_INDEX; 
+    }
+
+    const result = await this.docClient.query({
+            TableName: this.todoTable,
+            IndexName: indexName,
+            KeyConditionExpression: 'userId = :userId',
+            ExpressionAttributeValues: {
+                ':userId': userId
+            },
+            Limit: limit,
+            ScanIndexForward: false,
+            ExclusiveStartKey: nextKey
+        }
+    ).promise();
+
+    return { 
+      items: result.Items as TodoItem[],
+      nextKey: encodeNextKey(result.LastEvaluatedKey)
+  } as GetTodoRes;
 }
 
   async createTodo(todo: TodoItem): Promise<TodoItem> {
