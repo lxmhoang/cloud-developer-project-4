@@ -251,11 +251,13 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         {this.state.todos.map((todo, pos) => {
           return (
             <Grid.Row key={todo.todoId}>
-            <GridColumn>{todo.attachmentUrl && (
-              <Image src={todo.attachmentUrl} size="medium" wrapped />
-            )}</GridColumn>
+                <GridColumn>{todo.attachmentUrl && (
+                  <Image src={todo.attachmentUrl} size="large"  />
+                )}
+                </GridColumn>
 
-              <Grid.Column width={1} verticalAlign="middle">
+              <Grid.Column width={2} verticalAlign="middle">
+                {todo.done ? 'Done' : 'Not Yet'}<br/>
                 <Checkbox
                   onChange={() => this.onTodoCheck(pos)}
                   checked={todo.done}
@@ -264,7 +266,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
               <Grid.Column width={2} verticalAlign="middle"  textAlign="left">
                 {todo.dueDate}
               </Grid.Column>
-              <Grid.Column width={10} verticalAlign="middle" textAlign="center"> 
+              <Grid.Column width={10} verticalAlign="middle" textAlign="left"> 
                 {todo.name}
               </Grid.Column>
               <Grid.Column width={1} floated="right"  verticalAlign="middle" >
@@ -286,9 +288,9 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                 </Button>
               </Grid.Column>
               
-              <Grid.Column width={16}>
+              {/* <Grid.Column width={16}>
                 <Divider />
-              </Grid.Column>
+              </Grid.Column> */}
             </Grid.Row>
           )
         })}
