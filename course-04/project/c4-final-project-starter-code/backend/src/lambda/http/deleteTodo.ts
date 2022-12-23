@@ -5,7 +5,7 @@ import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
 import { removeAttachment } from '../../helpers/attachmentUtils'
 
-import { deleteTodo } from '../../helpers/todos'
+import { deleteTodo } from '../../businessLogic/todos'
 import { getUserId } from '../utils'
 
 export const handler = middy(
